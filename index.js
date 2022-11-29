@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 // const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
@@ -19,6 +19,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         const categories = client.db('recycled_books').collection('categories');
+        const books = client.db('recycled_books').collection('books');
         // Use Aggregate to query multiple collection and then merge data
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -37,6 +38,26 @@ async function run() {
             // })
             res.send(options);
         });
+        app.get('/category/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {};
+            const options = await books.find(query).toArray();
+            const category_books = options.filter(n => n.category_id === id);
+            console.log(id);
+            res.send(category_books);
+        });
+        app.get('/books', async (req, res) => {
+            const query = {};
+            const options = await books.find(query).toArray();
+            res.send(options);
+        });
+        app.get('/books/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const book = await books.findOne(query);
+            res.send(book);
+        });
+
 
     }
     finally { }
