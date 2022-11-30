@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-// const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -20,6 +20,7 @@ async function run() {
     try {
         const categories = client.db('recycled_books').collection('categories');
         const books = client.db('recycled_books').collection('books');
+        const userCollection = client.db('recycled_books').collection('users');
         // Use Aggregate to query multiple collection and then merge data
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -56,6 +57,24 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const book = await books.findOne(query);
             res.send(book);
+        });
+
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+                return res.send({ accessToken: token });
+            }
+            console.log(user);
+            res.status(403).send({ accessToken: 'token' })
+        });
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result);
         });
 
 
