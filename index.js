@@ -41,6 +41,7 @@ async function run() {
         const booksDetails = client.db('recycled_books').collection('booksDetails');
         const userCollection = client.db('recycled_books').collection('users');
         const bookingsCollection = client.db('recycled_books').collection('bookings');
+        const allAdvertisedProducts = client.db('recycled_books').collection('AdvertisedProducts');
         // Use Aggregate to query multiple collection and then merge data
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -123,7 +124,16 @@ async function run() {
             const result = await userCollection.insertOne(user);
             res.send(result);
         });
-
+        app.post('/allAdvertisedProducts', async (req, res) => {
+            const user = req.body;
+            const result = await allAdvertisedProducts.insertOne(user);
+            res.send(result);
+        });
+        app.get('/allAdvertisedProducts', async (req, res) => {
+            const query = {};
+            const users = await allAdvertisedProducts.find(query).toArray();
+            res.send(users);
+        });
         app.get('/users', async (req, res) => {
             const query = {};
             const users = await userCollection.find(query).toArray();
