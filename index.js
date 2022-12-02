@@ -40,6 +40,7 @@ async function run() {
         const books = client.db('recycled_books').collection('books');
         const booksDetails = client.db('recycled_books').collection('booksDetails');
         const userCollection = client.db('recycled_books').collection('users');
+        const bookingsCollection = client.db('recycled_books').collection('bookings');
         // Use Aggregate to query multiple collection and then merge data
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -58,12 +59,12 @@ async function run() {
             // })
             res.send(options);
         });
-        app.get('/category/:id', async (req, res) => {
-            const id = req.params.id;
+        app.get('/category/:name', async (req, res) => {
+            const name = req.params.name;
             const query = {};
-            const options = await books.find(query).toArray();
-            const category_books = options.filter(n => n.category_id === id);
-            console.log(id);
+            const options = await booksDetails.find(query).toArray();
+            const category_books = options.filter(n => n.product_category === name);
+            console.log(name);
             res.send(category_books);
         });
         //all books
@@ -83,13 +84,20 @@ async function run() {
             res.send(result);
         });
         //my books
-        app.get('/books/:email', async (req, res) => {
+        app.get('/booksdetails/:email', async (req, res) => {
             const email = req.params.email;
             const query = {}
-            const books = await booksDetails.find(query);
+            const books = await booksDetails.find(query).toArray();
             const myBooks = books.filter(n => n.seller_email === email);
             // console.log(books)
             res.send(myBooks);
+            // res.send(books);
+        })
+        app.delete('/booksdetails/:email/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await booksDetails.deleteOne(filter);
+            res.send(result);
         })
         app.get('/books/:id', async (req, res) => {
             const id = req.params.id;
@@ -164,6 +172,42 @@ async function run() {
             const query = { email }
             const user = await userCollection.findOne(query);
             res.send({ isSeller: user?.role === 'seller' });
+        })
+        //booking
+        app.get('/bookings', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const bookings = await bookingsCollection.find(query).toArray();
+            res.send(bookings);
+        });
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            console.log(booking);
+            const query = {
+                status: booking.status,
+                email: booking.buyer_email,
+                title: booking.title
+            }
+
+            const alreadyBooked = await bookingsCollection.find(query).toArray();
+
+            if (alreadyBooked.length) {
+                const message = `You already have a booking on ${booking.title}`
+                return res.send({ acknowledged: false, message })
+            }
+
+            const result = await bookingsCollection.insertOne(booking);
+            res.send(result);
+        });
+        //my bookings 
+        app.get('/bookings/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = {}
+            const books = await bookingsCollection.find(query).toArray();
+            const myBooks = books.filter(n => n.buyer_email === email);
+            // console.log(books)
+            res.send(myBooks);
+            // res.send(books);
         })
 
 
