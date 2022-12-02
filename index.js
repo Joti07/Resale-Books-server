@@ -38,6 +38,7 @@ async function run() {
     try {
         const categories = client.db('recycled_books').collection('categories');
         const books = client.db('recycled_books').collection('books');
+        const booksDetails = client.db('recycled_books').collection('booksDetails');
         const userCollection = client.db('recycled_books').collection('users');
         // Use Aggregate to query multiple collection and then merge data
         app.get('/categories', async (req, res) => {
@@ -65,11 +66,31 @@ async function run() {
             console.log(id);
             res.send(category_books);
         });
+        //all books
         app.get('/books', async (req, res) => {
             const query = {};
             const options = await books.find(query).toArray();
             res.send(options);
         });
+        // app.post('/allbooks', async (req, res) => {
+        //     const books = req.body;
+        //     const result = await books.insertOne(books);
+        //     res.send(result);
+        // });
+        app.post('/books', async (req, res) => {
+            const books = req.body;
+            const result = await booksDetails.insertOne(books);
+            res.send(result);
+        });
+        //my books
+        app.get('/books/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = {}
+            const books = await booksDetails.find(query);
+            const myBooks = books.filter(n => n.seller_email === email);
+            // console.log(books)
+            res.send(myBooks);
+        })
         app.get('/books/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
