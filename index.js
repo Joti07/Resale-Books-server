@@ -100,6 +100,29 @@ async function run() {
             const users = await userCollection.find(query).toArray();
             res.send(users);
         });
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await userCollection.deleteOne(filter);
+            res.send(result);
+        })
+        //buyers
+        app.get('/users/buyers', async (req, res) => {
+            const query = {};
+            const options = await userCollection.find(query).toArray();
+            const buyers = options.filter(n => n.role === 'buyer');
+            // console.log(role);
+            res.send(buyers);
+        });
+
+        //sellers
+        app.get('/users/sellers', async (req, res) => {
+            const query = {};
+            const options = await userCollection.find(query).toArray();
+            const buyers = options.filter(n => n.role === 'seller');
+            // console.log(role);
+            res.send(buyers);
+        });
         //check admin
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
